@@ -3,6 +3,7 @@ const usersRouter = express.Router();
 const database = require('../helpers/database');
 const bcrypt = require('bcrypt');
 const { handleServerError } = require('../helpers/errorHelper');
+const authenticateToken = require('../helpers/tokenHelper');
 const saltRounds = 10;
 
 
@@ -44,5 +45,25 @@ usersRouter.post('/signup', async (req, res) => {
 });
 
 //with middleware
+usersRouter.get('/user-profile-detail', authenticateToken, async (req, res) => {
+  const { user_id } = req.user;
+  try {
+  let userQuery = 'SELECT name, email FROM users WHERE id = ?'
+  database.query(userQuery, user_id, (err, result) => {
+    if (err) {
+      handleServerError(res, err);
+    } else {
+      if (result.length === 0) {
+        res.status(500).json({ message: 'Error in getting user profile details' });
+      } else {
+        console.log(result)
+        res.status(200).json({ result });
+      }
+    }
+  });
+} catch (err) {
+  handleServerError(res, err);
+}
+});
 
 module.exports = usersRouter;

@@ -1,4 +1,5 @@
-
+start from backend folder for nodemon to track all folders -
+nodemon src/bin/www.js 
 
 
 MySQL database creation:
@@ -13,3 +14,4 @@ CREATE TABLE users (
     name VARCHAR(255) NOT NULL,
     PRIMARY KEY (id)
 );
+
