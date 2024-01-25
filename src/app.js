@@ -6,6 +6,7 @@ const mysql = require('mysql2');
 const bodyParser = require('body-parser');
 const authRouter = require('./routes/auth');
 const usersRouter = require('./routes/users');
+const tasksRouter = require('./routes/tasks');
 const database = require('./helpers/database');
 
 const app = express();
@@ -28,5 +29,6 @@ database.connect((err => {
 //API endpoints
 app.use('/api/auth/', authRouter);
 app.use('/api/users/', usersRouter);
+app.use('/api/tasks/', tasksRouter)
 
 module.exports = app;
