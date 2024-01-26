@@ -6,8 +6,10 @@ const mysql = require('mysql2');
 const bodyParser = require('body-parser');
 const authRouter = require('./routes/auth');
 const usersRouter = require('./routes/users');
-const tasksRouter = require('./routes/tasks');
+const taskDaysRouter = require('./routes/taskdays');
 const database = require('./helpers/database');
+const tasksRouter = require('./routes/tasks');
+const journalsRouter = require('./routes/journals');
 
 const app = express();
 // Enable CORS
@@ -29,6 +31,8 @@ database.connect((err => {
 //API endpoints
 app.use('/api/auth/', authRouter);
 app.use('/api/users/', usersRouter);
-app.use('/api/tasks/', tasksRouter)
+app.use('/api/taskDays/', taskDaysRouter);
+app.use('/api/tasks/', tasksRouter);
+app.use('/api/journals/', journalsRouter);
 
 module.exports = app;

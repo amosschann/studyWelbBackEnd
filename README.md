@@ -46,5 +46,5 @@ CREATE TABLE journals (
 CREATE TABLE wellness (
     id INT PRIMARY KEY AUTO_INCREMENT,
     title VARCHAR(12),
-    description VARCHAR(255),
+    description VARCHAR(255)
 );

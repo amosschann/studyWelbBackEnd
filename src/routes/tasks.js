@@ -6,36 +6,16 @@ const authenticateToken = require('../helpers/tokenHelper');
 
 //with middleware
 
-//get all the user's taskdays within the given month 
-/*
-month is represented by integers - 1 = Jan, 12 = Dec
-join on tasks and journals table to ensure that there exists one row with the taskdays id 
-used to mark calendar - filter out those dates that have no tasks or journal
-*/
-tasksRouter.get('/get-user-taskdays', authenticateToken, async (req, res) => {
-    const { user_id } = req.user;
-    const { month, year } = req.query;
+//get all the user's tasks for the day
+tasksRouter.get('/get-tasks', authenticateToken, async (req, res) => {
+    // const { user_id } = req.user;
+    const { taskDaysId } = req.query;
     try {
-        let userQuery = `
-            SELECT td.*
-            FROM taskdays AS td
-            LEFT JOIN tasks AS t ON td.id = t.taskdays_id
-            LEFT JOIN journals AS j ON td.id = j.taskdays_id
-            WHERE td.user_id = ? 
-            AND MONTH(td.date) = ? 
-            AND YEAR(td.date) = ?
-            AND (
-                EXISTS (SELECT 1 FROM tasks WHERE taskdays_id = td.id) 
-                OR 
-                EXISTS (SELECT 1 FROM journals WHERE taskdays_id = td.id)
-            );
-        `;
-        database.query(userQuery, [user_id, month, year], (err, result) => {
-            console.log(result)
+        let userQuery = 'SELECT * FROM tasks WHERE taskdays_id = ? ORDER BY start_time ASC';
+        database.query(userQuery, [taskDaysId], (err, result) => {
             if (err) {
                 handleServerError(res, err);
             } else {
-                console.log(result);
                 res.status(200).json({ result });
             }
         });
@@ -43,5 +23,118 @@ tasksRouter.get('/get-user-taskdays', authenticateToken, async (req, res) => {
         handleServerError(res, err);
     }
 });
+
+//get all the user's to do tasks for the day
+tasksRouter.get('/get-to-do-tasks', authenticateToken, async (req, res) => {
+    const { user_id } = req.user;
+    const { date } = req.query;
+    console.log('date',date)
+
+    try {
+        //check if the current date has a taskday entry
+        let taskdayQuery = 'SELECT id FROM taskdays WHERE user_id = ? AND date = ?';
+        database.query(taskdayQuery, [user_id, date], (taskdayErr, taskdayResult) => {
+            if (taskdayErr) {
+                handleServerError(res, taskdayErr);
+            } else {
+                if (taskdayResult.length > 0) {
+                    //if taskday entry exists, use its id to get tasks with mood = null
+                    const taskdayId = taskdayResult[0].id;
+                    let tasksQuery = 'SELECT * FROM tasks WHERE taskdays_id = ? AND mood IS NULL ORDER BY start_time ASC';
+                    database.query(tasksQuery, [taskdayId], (tasksErr, tasksResult) => {
+                        if (tasksErr) {
+                            handleServerError(res, tasksErr);
+                        } else {
+                            res.status(200).json({ result: tasksResult });
+                        }
+                    });
+                } else {
+                    //if taskday entry does not exist, create a new entry and continue with the same query
+                    let createTaskdayQuery = 'INSERT INTO taskdays (user_id, date) VALUES (?, ?)';
+                    database.query(createTaskdayQuery, [user_id, date], (createTaskdayErr, createTaskdayResult) => {
+                        if (createTaskdayErr) {
+                            handleServerError(res, createTaskdayErr);
+                        } else {
+                            //use the newly created taskday id to get tasks with mood = null
+                            const newTaskdayId = createTaskdayResult.insertId;
+                            let tasksQuery = 'SELECT * FROM tasks WHERE taskdays_id = ? AND mood IS NULL ORDER BY start_time ASC';
+                            database.query(tasksQuery, [newTaskdayId], (tasksErr, tasksResult) => {
+                                if (tasksErr) {
+                                    handleServerError(res, tasksErr);
+                                } else {
+                                    res.status(200).json({ result: tasksResult });
+                                }
+                            });
+                        }
+                    });
+                }
+            }
+        });
+    } catch (err) {
+        handleServerError(res, err);
+    }
+});
+
+
+//get all the user's completed tasks for the day
+/*
+mood:
+0: happy 
+1: neutral
+2: unhappy
+*/
+tasksRouter.get('/get-completed-tasks', authenticateToken, async (req, res) => {
+    const { user_id } = req.user;
+    const { date } = req.query;
+    console.log('date',date)
+
+    try {
+        //check if the current date has a taskday entry
+        let taskdayQuery = 'SELECT id FROM taskdays WHERE user_id = ? AND date = ?';
+        database.query(taskdayQuery, [user_id, date], (taskdayErr, taskdayResult) => {
+            if (taskdayErr) {
+                handleServerError(res, taskdayErr);
+            } else {
+                if (taskdayResult.length > 0) {
+                    //if taskday entry exists, use its id to get tasks with mood = null
+                    const taskdayId = taskdayResult[0].id;
+                    let tasksQuery = 'SELECT * FROM tasks WHERE taskdays_id = ? AND mood IS NOT NULL ORDER BY start_time ASC';
+                    database.query(tasksQuery, [taskdayId], (tasksErr, tasksResult) => {
+                        if (tasksErr) {
+                            handleServerError(res, tasksErr);
+                        } else {
+                            res.status(200).json({ result: tasksResult });
+                        }
+                    });
+                } else {
+                    //if taskday entry does not exist, create a new entry and continue with the same query
+                    let createTaskdayQuery = 'INSERT INTO taskdays (user_id, date) VALUES (?, ?)';
+                    database.query(createTaskdayQuery, [user_id, date], (createTaskdayErr, createTaskdayResult) => {
+                        if (createTaskdayErr) {
+                            handleServerError(res, createTaskdayErr);
+                        } else {
+                            //use the newly created taskday id to get tasks with mood = null
+                            const newTaskdayId = createTaskdayResult.insertId;
+                            let tasksQuery = 'SELECT * FROM tasks WHERE taskdays_id = ? AND mood IS NOT NULL ORDER BY start_time ASC';
+                            database.query(tasksQuery, [newTaskdayId], (tasksErr, tasksResult) => {
+                                if (tasksErr) {
+                                    handleServerError(res, tasksErr);
+                                } else {
+                                    res.status(200).json({ result: tasksResult });
+                                }
+                            });
+                        }
+                    });
+                }
+            }
+        });
+    } catch (err) {
+        handleServerError(res, err);
+    }
+});
+
+
+
+
 
 module.exports = tasksRouter;
