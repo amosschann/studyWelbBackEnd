@@ -28,7 +28,6 @@ tasksRouter.get('/get-tasks', authenticateToken, async (req, res) => {
 tasksRouter.get('/get-to-do-tasks', authenticateToken, async (req, res) => {
     const { user_id } = req.user;
     const { date } = req.query;
-    console.log('date',date)
 
     try {
         //check if the current date has a taskday entry
@@ -86,7 +85,6 @@ mood:
 tasksRouter.get('/get-completed-tasks', authenticateToken, async (req, res) => {
     const { user_id } = req.user;
     const { date } = req.query;
-    console.log('date',date)
 
     try {
         //check if the current date has a taskday entry
@@ -132,6 +130,36 @@ tasksRouter.get('/get-completed-tasks', authenticateToken, async (req, res) => {
         handleServerError(res, err);
     }
 });
+
+
+tasksRouter.post('/add-task', authenticateToken, (req, res) => {
+    try {
+        const {user_id} = req.user;
+        const { title, taskDescription, startTime, endTime, date} = req.body;
+        //get taskday id
+        let taskdayQuery = 'SELECT id FROM taskdays WHERE user_id = ? AND date = ?';
+        database.query(taskdayQuery, [user_id, date], (taskdayErr, taskdayResult) => {
+            if (taskdayErr) {
+                handleServerError(res, taskdayErr);
+            } else {
+                const taskdayId = taskdayResult[0].id;
+                // add to tasks
+                let tasksQuery = 'INSERT INTO tasks (taskdays_id, task_title, task_description, start_time, end_time) VALUES (?, ?, ?, ?, ?)';
+                database.query(tasksQuery, [taskdayId, title, taskDescription, startTime, endTime], (tasksErr, tasksResult) => {
+                    if (tasksErr) {
+                        handleServerError(res, tasksErr);
+                    } else {
+                        res.status(200).json({ result: tasksResult });
+                    }
+                });
+            }
+        });
+       
+        
+    } catch (error) {
+        handleServerError(res, error);
+    }
+  });
 
 
 
