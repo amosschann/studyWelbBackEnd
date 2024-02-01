@@ -131,7 +131,7 @@ tasksRouter.get('/get-completed-tasks', authenticateToken, async (req, res) => {
     }
 });
 
-
+//add
 tasksRouter.post('/add-task', authenticateToken, (req, res) => {
     try {
         const {user_id} = req.user;
@@ -159,8 +159,87 @@ tasksRouter.post('/add-task', authenticateToken, (req, res) => {
     } catch (error) {
         handleServerError(res, error);
     }
-  });
+});
 
+//delete
+tasksRouter.post('/delete-task', authenticateToken, (req, res) => {
+    try {
+        const { task_id} = req.body;
+        //delete query
+        let deleteQuery = 'DELETE FROM tasks WHERE id = ?';
+        database.query(deleteQuery, [task_id], (deleteErr, deleteResult) => {
+            if (deleteErr) {
+                handleServerError(res, deleteErr);
+            } else {
+                res.status(200).json({ result: deleteResult});
+            }
+        });
+       
+        
+    } catch (error) {
+        handleServerError(res, error);
+    }
+});
+
+//complete
+tasksRouter.post('/complete-task', authenticateToken, (req, res) => {
+    try {
+        const { task_id, mood } = req.body;
+        //delete query
+        let completeQuery = 'UPDATE tasks SET mood = ? WHERE id = ?';
+        database.query(completeQuery, [mood, task_id], (completeErr, completeResult) => {
+            if (completeErr) {
+                handleServerError(res, completeErr);
+            } else {
+                res.status(200).json({ result: completeResult});
+            }
+        });
+       
+        
+    } catch (error) {
+        handleServerError(res, error);
+    }
+});
+
+//undo complete
+tasksRouter.post('/undo-complete-task', authenticateToken, (req, res) => {
+    try {
+        const { task_id } = req.body;
+        //delete query
+        let undoQuery = 'UPDATE tasks SET mood = NULL WHERE id = ?';
+        database.query(undoQuery, [task_id], (undoErr,undoResult) => {
+            if (undoErr) {
+                handleServerError(res,undoErr);
+            } else {
+                res.status(200).json({ result:undoResult});
+            }
+        });
+       
+        
+    } catch (error) {
+        handleServerError(res, error);
+    }
+});
+
+//edit
+tasksRouter.post('/edit-task', authenticateToken, (req, res) => {
+    try {
+        const { title, taskDescription, startTime, endTime, task_id} = req.body;
+        //get taskday id
+        let editQuery = 'UPDATE tasks SET task_title = ?, task_description = ?, start_time = ?, end_time = ? WHERE id = ?';
+        database.query(editQuery, [title, taskDescription, startTime, endTime,  task_id], (editErr,editResult) => {
+            if (editErr) {
+                handleServerError(res,editErr);
+            } else {
+                res.status(200).json({ result:editResult});
+            }
+        });
+    
+        
+    } catch (error) {
+        handleServerError(res, error);
+    }
+});
 
 
 
