@@ -10,6 +10,7 @@ const taskDaysRouter = require('./routes/taskdays');
 const database = require('./helpers/database');
 const tasksRouter = require('./routes/tasks');
 const journalsRouter = require('./routes/journals');
+const wellnessRouter = require('./routes/wellness');
 
 const app = express();
 // Enable CORS
@@ -34,5 +35,6 @@ app.use('/api/users/', usersRouter);
 app.use('/api/taskDays/', taskDaysRouter);
 app.use('/api/tasks/', tasksRouter);
 app.use('/api/journals/', journalsRouter);
+app.use('/api/wellness/', wellnessRouter);
 
 module.exports = app;
