@@ -25,11 +25,12 @@ CREATE TABLE taskdays (
 CREATE TABLE tasks (
     id INT PRIMARY KEY AUTO_INCREMENT,
     taskdays_id INT,
-    task_title VARCHAR(12),
+    task_title VARCHAR(50),
     task_description VARCHAR(255),
     start_time TIME,
     end_time TIME,
     mood INT,
+    wellnessCheckpoint  INT NOT NULL DEFAULT 0,
     FOREIGN KEY (taskdays_id) REFERENCES taskdays(id)
 );
 

@@ -242,6 +242,36 @@ tasksRouter.post('/edit-task', authenticateToken, (req, res) => {
 });
 
 
+//add - welless task
+tasksRouter.post('/complete-wellness-task', authenticateToken, (req, res) => {
+    try {
+        const {user_id} = req.user;
+        const { title, taskDescription, date, wellnessCheckpoint} = req.body;
+        //get taskday id
+        let taskdayQuery = 'SELECT id FROM taskdays WHERE user_id = ? AND date = ?';
+        database.query(taskdayQuery, [user_id, date], (taskdayErr, taskdayResult) => {
+            if (taskdayErr) {
+                handleServerError(res, taskdayErr);
+            } else {
+                const taskdayId = taskdayResult[0].id;
+                // add to tasks - happy mood and isWellness true
+                let tasksQuery = 'INSERT INTO tasks (taskdays_id, task_title, task_description, mood, wellnessCheckpoint) VALUES (?, ?, ?, ?, ?)';
+                database.query(tasksQuery, [taskdayId, title, taskDescription, 0, wellnessCheckpoint], (tasksErr, tasksResult) => {
+                    if (tasksErr) {
+                        handleServerError(res, tasksErr);
+                    } else {
+                        res.status(200).json({ result: tasksResult });
+                    }
+                });
+            }
+        });
+       
+    } catch (error) {
+        handleServerError(res, error);
+    }
+});
+
+
 
 
 module.exports = tasksRouter;
