@@ -247,6 +247,10 @@ tasksRouter.post('/complete-wellness-task', authenticateToken, (req, res) => {
     try {
         const {user_id} = req.user;
         const { title, taskDescription, date, wellnessCheckpoint} = req.body;
+        //calculate time for wellness activity - 20mins before current time as wellness activity is 20mins by default
+        const currentTime = new Date(); // current time of the post request
+        const startTime = new Date(currentTime.getTime() - 20 * 60 * 1000); // 20 minutes before end_time
+
         //get taskday id
         let taskdayQuery = 'SELECT id FROM taskdays WHERE user_id = ? AND date = ?';
         database.query(taskdayQuery, [user_id, date], (taskdayErr, taskdayResult) => {
@@ -255,8 +259,8 @@ tasksRouter.post('/complete-wellness-task', authenticateToken, (req, res) => {
             } else {
                 const taskdayId = taskdayResult[0].id;
                 // add to tasks - happy mood and isWellness true
-                let tasksQuery = 'INSERT INTO tasks (taskdays_id, task_title, task_description, mood, wellnessCheckpoint) VALUES (?, ?, ?, ?, ?)';
-                database.query(tasksQuery, [taskdayId, title, taskDescription, 0, wellnessCheckpoint], (tasksErr, tasksResult) => {
+                let tasksQuery = 'INSERT INTO tasks (taskdays_id, task_title, task_description, start_time, end_time, mood, wellnessCheckpoint) VALUES (?, ?, ?, ?, ?, ?, ?)';
+                database.query(tasksQuery, [taskdayId, title, taskDescription, startTime, currentTime, 0, wellnessCheckpoint], (tasksErr, tasksResult) => {
                     if (tasksErr) {
                         handleServerError(res, tasksErr);
                     } else {
