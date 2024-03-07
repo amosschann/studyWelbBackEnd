@@ -64,7 +64,7 @@ const onListening = () => {
   debug(`Listening on ${bind}`);
 };
 /**
- * Listen on provided port, on all network interfaces.
+ * Listen on provided port, on all network interfaces
  */
 server.listen(port);
 server.on('error', onError);
