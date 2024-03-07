@@ -94,7 +94,6 @@ journalsRouter.post('/update-journal-entry', authenticateToken, async (req, res)
                 if (taskdayResult.length > 0) {
                     //use taskday id to check if journal exists 
                     const taskdayId = taskdayResult[0].id;
-                    console.log(taskdayId)
                     let journalQuery = 'SELECT * FROM journals WHERE taskdays_id = ?';
                     database.query(journalQuery, [taskdayId], (journalErr, journalResult) => {
                         if (journalErr) {
@@ -131,5 +130,66 @@ journalsRouter.post('/update-journal-entry', authenticateToken, async (req, res)
         handleServerError(res, err);
     }
 });
+
+
+//get all overallmood within dates
+journalsRouter.get('/get-journal-overallmood', authenticateToken, async (req, res) => {
+    const { user_id } = req.user;
+    const { start_date, end_date } = req.query;
+
+    try {
+        // query for overallmood for taskdays that exist within the specified date range
+        let overallmoodQuery = 
+        `
+            WITH RECURSIVE dates AS (
+                SELECT DATE(? + INTERVAL 0 DAY) AS date
+                UNION ALL
+                SELECT DATE(date + INTERVAL 1 DAY)
+                FROM dates
+                WHERE date < ?
+            )
+            SELECT d.date AS journal_date, j.overallmood AS overallmood, td.id as taskDaysId
+            FROM dates d
+            LEFT JOIN taskdays td ON d.date = td.date AND td.user_id = ?
+            LEFT JOIN journals j ON td.id = j.taskdays_id
+        `;
+        database.query(overallmoodQuery, [start_date, end_date, user_id], (overallmoodErr, overallmoodResult) => {
+            if (overallmoodErr) {
+                handleServerError(res, overallmoodErr);
+            } else {
+                const formattedResult = overallmoodResult.map(entry => ({
+                    date: entry.journal_date,
+                    overallMood: entry.overallmood,
+                    taskDaysId: entry.taskDaysId
+                }));
+                res.status(200).json({ result: formattedResult });
+            }
+        });
+    } catch (err) {
+        handleServerError(res, err);
+    }
+});
+
+
+
+//get MoodDescription for requested day
+journalsRouter.get('/get-journal-mood-description', authenticateToken, async (req, res) => {
+    const { tasksDayId } = req.query;
+    try {
+        // query for 
+        let moodDescriptionQuery = 'SELECT mood FROM journals WHERE taskdays_id = ?'
+        database.query(moodDescriptionQuery, [tasksDayId], (moodDescriptionErr, moodDescriptionResult) => {
+            if (moodDescriptionErr) {
+                handleServerError(res, moodDescriptionErr);
+            } else {
+                res.status(200).json({ result: moodDescriptionResult });
+            }
+        });
+    } catch (err) {
+        handleServerError(res, err);
+    }
+});
+
+
 
 module.exports = journalsRouter;
