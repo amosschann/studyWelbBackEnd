@@ -18,7 +18,7 @@ CREATE TABLE users (
 CREATE TABLE taskdays (
     id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT,
-    date DATE,
+    date DATE UNIQUE,
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
@@ -36,16 +36,18 @@ CREATE TABLE tasks (
 
 CREATE TABLE journals (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    taskdays_id INT,
+    taskdays_id INT NOT NULL UNIQUE,
     gratitude VARCHAR(255),
     general VARCHAR(255),
-    mood VARCHAR(255),
+    mood VARCHAR(50),
     overallmood INT,
     FOREIGN KEY (taskdays_id) REFERENCES taskdays(id)
 );
 
 CREATE TABLE wellness (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    title VARCHAR(12),
-    description VARCHAR(255)
+    title VARCHAR(50),
+    description VARCHAR(255),
+    user_id INT,
+    FOREIGN KEY (user_id) REFERENCES users(id)
 );
